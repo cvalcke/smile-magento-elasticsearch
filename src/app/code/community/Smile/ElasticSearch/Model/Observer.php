@@ -111,24 +111,24 @@ class Smile_ElasticSearch_Model_Observer
     {
         $helper = Mage::helper('smile_elasticsearch');
         $category = $observer->getEvent()->getCategory();
-        if ($helper->isEnterpriseSupportEnabled() == false) {
-            $productIds = $category->getProductCollection()->getAllIds();
-            $this->_getIndexer()->resetSearchResults();
-            $currentIndex = Mage::helper('catalogsearch')->getEngine()->getCurrentIndex();
-            $currentIndex->getMapping('product')->rebuildIndex(null, $productIds);
-        } else {
-            $category = $observer->getEvent()->getCategory();
-            $productIds = $category->getAffectedProductIds();
-            if (empty($productIds)) {
-                return $this;
-            }
-            $client = Mage::getModel('enterprise_mview/client');
-            $client->init('catalogsearch_fulltext');
-
-            $client->execute('enterprise_catalogsearch/index_action_fulltext_refresh_row', array('value' => $productIds));
-        }
-
         if ($helper->isActiveEngine()) {
+            if ($helper->isEnterpriseSupportEnabled() == false) {
+                $productIds = $category->getProductCollection()->getAllIds();
+                $this->_getIndexer()->resetSearchResults();
+                $currentIndex = Mage::helper('catalogsearch')->getEngine()->getCurrentIndex();
+                $currentIndex->getMapping('product')->rebuildIndex(null, $productIds);
+            } else {
+                $category = $observer->getEvent()->getCategory();
+                $productIds = $category->getAffectedProductIds();
+                if (empty($productIds)) {
+                    return $this;
+                }
+                $client = Mage::getModel('enterprise_mview/client');
+                $client->init('catalogsearch_fulltext');
+
+                $client->execute('enterprise_catalogsearch/index_action_fulltext_refresh_row', array('value' => $productIds));
+            }
+
             $engine = Mage::helper('catalogsearch')->getEngine();
             $index = $engine->getCurrentIndex();
             $mapping = $index->getMapping('category');
